@@ -16,11 +16,17 @@
 #include "GLFW\glfw3.h"
 #include <string>
 #include "Shader.hpp"
+#include "Camera.hpp"
 
 int glWindowWidth = 640;
 int glWindowHeight = 480;
 int retina_width, retina_height;
 GLFWwindow* glWindow = NULL;
+gps::Camera* camera;
+float cameraSpeed = 0.05f;
+bool firstMouse = true;
+float lastX = 400, lastY = 300;
+float pitch = 0.0f, yaw = 90.0f;
 
 //vertex data --- position and color
 GLfloat vertices[] = {
@@ -139,6 +145,30 @@ bool initOpenGLWindow()
 	return true;
 }
 
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+	if (firstMouse)
+	{
+		lastX = xpos;
+		lastY = ypos;
+		firstMouse = false;
+	}
+
+	float xoffset = xpos - lastX;
+	float yoffset = lastY - ypos;
+	lastX = xpos;
+	lastY = ypos;
+
+	float sensitivity = 0.05;
+	xoffset *= sensitivity;
+	yoffset *= sensitivity;
+
+	yaw += xoffset;
+	pitch += yoffset;
+
+	camera->rotate(pitch, yaw);
+}
+
 float angle = 0;
 float angle2 = 0;
 float angle3 = 0;
@@ -148,6 +178,8 @@ void renderScene()
 	glClearColor(0.8, 0.8, 0.8, 1.0);
 	glViewport(0, 0, retina_width, retina_height);
 
+	glfwSetCursorPosCallback(glWindow, mouse_callback);
+
 	if (glfwGetKey(glWindow, GLFW_KEY_Q)) {
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
@@ -156,7 +188,23 @@ void renderScene()
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	}
 
-	model = glm::mat4(1.0f);
+	if (glfwGetKey(glWindow, GLFW_KEY_W)) {
+		camera->move(gps::MOVE_DIRECTION::MOVE_FORWARD, cameraSpeed);
+	}
+
+	if (glfwGetKey(glWindow, GLFW_KEY_S)) {
+		camera->move(gps::MOVE_DIRECTION::MOVE_BACKWARD, cameraSpeed);
+	}
+
+	if (glfwGetKey(glWindow, GLFW_KEY_A)) {
+		camera->move(gps::MOVE_DIRECTION::MOVE_LEFT, cameraSpeed);
+	}
+
+	if (glfwGetKey(glWindow, GLFW_KEY_D)) {
+		camera->move(gps::MOVE_DIRECTION::MOVE_RIGHT, cameraSpeed);
+	}
+
+	model = camera->getViewMatrix();//glm::mat4(1.0f);
 
 	if (glfwGetKey(glWindow, GLFW_KEY_R)) {
 		angle += 0.02f;
@@ -180,7 +228,7 @@ void renderScene()
 	glBindVertexArray(objectVAO);
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
-	model = glm::mat4(1.0f);
+	model = camera->getViewMatrix();//glm::mat4(1.0f);
 
 	if (glfwGetKey(glWindow, GLFW_KEY_T)) {
 		angle2 += 0.02f;
@@ -216,6 +264,10 @@ int main(int argc, const char * argv[]) {
 
 	myCustomShader.loadShader("shaders/shaderStart.vert", "shaders/shaderStart.frag");
 	myCustomShader.useShaderProgram();
+
+	glfwSetInputMode(glWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+	camera = new gps::Camera(glm::vec3(0.0f,0.0f,2.0f),glm::vec3(0.0f,0.0f,0.0f));
 
 	model = glm::mat4(1.0f);
 	modelLoc = glGetUniformLocation(myCustomShader.shaderProgram, "model");
