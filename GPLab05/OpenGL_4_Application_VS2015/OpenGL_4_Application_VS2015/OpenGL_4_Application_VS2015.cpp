@@ -159,12 +159,12 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 	lastX = xpos;
 	lastY = ypos;
 
-	float sensitivity = 0.05;
+	float sensitivity = 0.0005;
 	xoffset *= sensitivity;
 	yoffset *= sensitivity;
 
-	yaw += xoffset;
-	pitch += yoffset;
+	yaw = xoffset;
+	pitch = yoffset;
 
 	camera->rotate(pitch, yaw);
 }
@@ -204,7 +204,7 @@ void renderScene()
 		camera->move(gps::MOVE_DIRECTION::MOVE_RIGHT, cameraSpeed);
 	}
 
-	model = camera->getViewMatrix();//glm::mat4(1.0f);
+	model = glm::mat4(1.0f);
 
 	if (glfwGetKey(glWindow, GLFW_KEY_R)) {
 		angle += 0.02f;
@@ -217,7 +217,7 @@ void renderScene()
 	glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 0.0f, 5.0f), glm::vec3(0.0f, 0.0f, -10.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
 	GLint viewLoc = glGetUniformLocation(myCustomShader.shaderProgram, "view"); 
-	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(camera->getViewMatrix()));
 
 	// initialize the projection matrix
 	glm::mat4 projection = glm::perspective(70.0f, (float)glWindowWidth / (float)glWindowHeight, 0.1f, 1000.0f);// send matrix data to shader
@@ -228,7 +228,7 @@ void renderScene()
 	glBindVertexArray(objectVAO);
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
-	model = camera->getViewMatrix();//glm::mat4(1.0f);
+	model = glm::mat4(1.0f);
 
 	if (glfwGetKey(glWindow, GLFW_KEY_T)) {
 		angle2 += 0.02f;
