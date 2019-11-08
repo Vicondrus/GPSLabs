@@ -14,6 +14,7 @@
 #include "GLEW/glew.h"
 #include <string>
 #include <vector>
+#include "glm/gtc/type_ptr.hpp"
 #include "Shader.hpp"
 
 namespace gps {
@@ -46,8 +47,9 @@ public:
     std::vector<Vertex> vertices;
     std::vector<GLuint> indices;
     std::vector<Texture> textures;
+	Material material;
 
-	Mesh(std::vector<Vertex> vertices, std::vector<GLuint> indices, std::vector<Texture> textures);
+	Mesh(std::vector<Vertex> vertices, std::vector<GLuint> indices, std::vector<Texture> textures, Material material);
 
 	void Draw(gps::Shader shader);
 

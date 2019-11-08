@@ -7,15 +7,17 @@
 //
 
 #include "Mesh.hpp"
+
+
 namespace gps {
 
 	/* Mesh Constructor */
-	Mesh::Mesh(std::vector<Vertex> vertices, std::vector<GLuint> indices, std::vector<Texture> textures)
+	Mesh::Mesh(std::vector<Vertex> vertices, std::vector<GLuint> indices, std::vector<Texture> textures, Material material)
 	{
 		this->vertices = vertices;
 		this->indices = indices;
 		this->textures = textures;
-
+		this->material = material;
 		this->setupMesh();
 	}
 
@@ -23,6 +25,10 @@ namespace gps {
 	void Mesh::Draw(gps::Shader shader)
 	{
 		shader.useShaderProgram();
+
+		glUniform3fv(glGetUniformLocation(shader.shaderProgram, "baseColor") , 1, glm::value_ptr(material.diffuse));
+		glUniform3fv(glGetUniformLocation(shader.shaderProgram, "ambientColor"), 1, glm::value_ptr(material.ambient));
+		glUniform3fv(glGetUniformLocation(shader.shaderProgram, "specularColor"), 1, glm::value_ptr(material.specular));
 
 		//set textures
 		for (GLuint i = 0; i < textures.size(); i++)

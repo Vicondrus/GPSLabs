@@ -13,6 +13,8 @@ uniform mat3 normalMatrix;
 uniform vec3 lightDir;
 uniform vec3 lightColor;
 uniform vec3 baseColor;
+uniform vec3 ambientColor;
+uniform vec3 specularColor;
 
 out vec3 color;
 
@@ -52,7 +54,7 @@ void main()
 	computeLight();
 	
 	//compute final vertex color
-	color = min((ambient + diffuse) * baseColor + specular, 1.0f);
+	color = min(ambient * ambientColor + diffuse * baseColor + specular * specularColor, 1.0f);
 
 	gl_Position = projection * view * model * vec4(vPosition, 1.0f);
 } 

@@ -53,7 +53,7 @@ GLuint baseColorLoc;
 GLuint baseColorLoc2;
 glm::vec3 viewPos;
 
-GLfloat angleY;
+GLfloat angleY, angleX;
 
 gps::Shader myCustomShader;
 gps::Shader myCustomShader2;
@@ -100,7 +100,7 @@ void windowResizeCallback(GLFWwindow* window, int width, int height)
 
 void initObjects()
 {
-	teapot = gps::Model3D("models/teapots/teapot4segU.obj", "models/teapots/");
+	teapot = gps::Model3D("models/teapots/teapot50segU.obj", "models/teapots/");
 }
 
 void initUniforms()
@@ -226,6 +226,16 @@ void processKeys()
 		angleY += 0.5f;
 	}
 
+	if (glfwGetKey(glWindow, GLFW_KEY_W)) {
+		//TODO
+		angleX += 0.5f;
+	}
+
+	if (glfwGetKey(glWindow, GLFW_KEY_S)) {
+		//TODO
+		angleX -= 0.5f;
+	}
+
 	if (glfwGetKey(glWindow, GLFW_KEY_ESCAPE))
 	{
 		//exit(0);
@@ -242,6 +252,7 @@ void renderScene()
 	model = glm::mat4(1.0f);
 
 	model = glm::rotate(model, glm::radians(angleY), glm::vec3(0.0f, 1.0f, 0.0f));
+	model = glm::rotate(model, glm::radians(angleX), glm::vec3(1.0f, 0.0f, 0.0f));
 	myCustomShader.useShaderProgram();
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 	myCustomShader2.useShaderProgram();

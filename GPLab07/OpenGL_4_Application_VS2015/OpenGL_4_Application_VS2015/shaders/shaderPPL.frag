@@ -13,6 +13,8 @@ in vec3 vNorm;
 //lighting
 uniform vec3 lightDir;
 uniform vec3 lightColor;
+uniform vec3 ambientColor;
+uniform vec3 specularColor;
 
 vec3 ambient;
 float ambientStrength = 0.2f;
@@ -51,6 +53,6 @@ void main()
 	computeLight();
 	
 	//compute final vertex color
-	vec3 color = min((ambient + diffuse) * baseColor + specular, 1.0f);
+	vec3 color = min(ambient * ambientColor + diffuse * baseColor + specular * specularColor, 1.0f);
 	fColor = vec4(color, 1.0f);
 }
