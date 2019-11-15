@@ -100,7 +100,7 @@ void windowResizeCallback(GLFWwindow* window, int width, int height)
 
 void initObjects()
 {
-	teapot = gps::Model3D("models/teapots/teapot50segU.obj", "models/teapots/");
+	teapot = gps::Model3D("models/teapots/teapot4segU.obj", "models/teapots/");
 }
 
 void initUniforms()

@@ -248,8 +248,27 @@ void renderScene()
 	// create a translation matrix
 	model = glm::translate(model, glm::vec3(2, 0, 0));// send matrix data to vertex shader
 	model = glm::rotate(model, angle2, glm::vec3(0, 0, 1));
+
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));// draw the second cube
-	myCustomShader.useShaderProgram();glBindVertexArray(objectVAO);
+	myCustomShader.useShaderProgram();
+	glBindVertexArray(objectVAO);
+	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+
+	model = glm::mat4(1.0f);
+
+	model = glm::rotate(model, -angle3, glm::vec3(0, 0, 1));
+
+	//model = glm::scale(model, glm::vec3(3, 2, 1));
+
+	model = glm::translate(model, glm::vec3(-2, 0, 0));
+
+	//model = glm::rotate(model, 0.3f, glm::vec3(0, 1, 0));
+
+	//model = glm::rotate(model, 0.5f, glm::vec3(1, 0, 0));
+	
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));// draw the second cube
+	myCustomShader.useShaderProgram();
+	glBindVertexArray(objectVAO);
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 }
 
