@@ -9,5 +9,5 @@ out vec4 fragmentColour;
 uniform sampler2D diffuseTexture;
 
 void main() {
-    fragmentColour = texture(diffuseTexture, passTexture); 
+    fragmentColour = texture(diffuseTexture,passTexture); 
 }

@@ -235,7 +235,9 @@ void renderScene()
 	GLint viewLoc = glGetUniformLocation(myCustomShader.shaderProgram, "view");
 	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 
-	double currentTimeStamp = glfwGetTime();    updateDelta(currentTimeStamp - lastTimeStamp); lastTimeStamp = currentTimeStamp;
+	double currentTimeStamp = glfwGetTime();    
+	updateDelta(currentTimeStamp - lastTimeStamp); 
+	lastTimeStamp = currentTimeStamp;
 	model = glm::translate(model, glm::vec3(delta, 0, 0));
 
 	//create rotation matrix

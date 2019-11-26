@@ -1,4 +1,4 @@
-#version 410 core
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    #version 410 core
 
 in vec3 normal;
 in vec4 fragPosEye;
@@ -84,5 +84,5 @@ void main()
 	vec3 color1 = computeLightComponents(lightPos,lightColor);
 	vec3 color2 = computeLightComponents(lightPos2,lightColor2);
     
-    fColor = vec4(color1*2 + color2, 1.0f);
+    fColor = vec4(color1 + 2*color2, 1.0f);
 }
