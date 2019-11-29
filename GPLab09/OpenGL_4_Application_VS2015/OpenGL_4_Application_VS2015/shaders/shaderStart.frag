@@ -29,17 +29,30 @@ uniform sampler2D shadowMap;
 in vec2 fragTexCoords;
 in vec4 fragPosLightSpace;
 
-float computeShadow(){
-// perform perspective divide
-float bias = max(0.05f* (1.0f-dot(normal, lightDir)), 0.005f);
-vec3 normalizedCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-normalizedCoords = normalizedCoords * 0.5 + 0.5;
-if (normalizedCoords.z > 1.0f)
-	return 0.0f;
-float closestDepth = texture(shadowMap, normalizedCoords.xy).r;
-float currentDepth = normalizedCoords.z;
-float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;
-return shadow;
+float computeShadow()
+{
+	// perform perspective divide
+	vec3 normalizedCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+	
+	// Transform to [0,1] range
+	normalizedCoords = normalizedCoords * 0.5 + 0.5;
+	
+	if (normalizedCoords.z > 1.0f)
+		return 0.0f;
+	
+	// Get closest depth value from light's perspective
+	float closestDepth = texture(shadowMap, normalizedCoords.xy).r;
+//o = vec3(closestDepth);	
+	// Get depth of current fragment from light's perspective
+	float currentDepth = normalizedCoords.z;
+	
+	// Check whether current frag pos is in shadow
+	float bias = 0.005;
+	float shadow = currentDepth -bias > closestDepth ? 1.0 : 0.0;
+	
+	//return 0.0f;
+	return shadow;
+
 }
 
 vec3 computeLightComponents(vec3 lightColor)

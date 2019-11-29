@@ -50,11 +50,12 @@ GLuint lightPosLoc;
 glm::vec3 lightPos2;
 GLuint lightPosLoc2;
 
-gps::Camera myCamera(glm::vec3(0.0f, 1.0f, 2.5f), glm::vec3(0.0f, 0.0f, -1.0f));
-float cameraSpeed = 0.01f;
+gps::Camera myCamera(glm::vec3(0.0f, 1.0f, 2.5f), glm::vec3(0.0f, 1.0f, -1.0f));
+float cameraSpeed = 0.1f;
 
 bool pressedKeys[1024];
 float angle = 0.0f;
+const GLfloat near_plane = 1.0f, far_plane = 30.0f;
 
 gps::Model3D myModel, ground;
 gps::Shader myCustomShader, shadowShader;
@@ -201,6 +202,7 @@ bool initOpenGLWindow()
 
 void initOpenGLState()
 {
+	//glEnable(GL_FRAMEBUFFER_SRGB);
 	glClearColor(0.3, 0.3, 0.3, 1.0);
 	glViewport(0, 0, retina_width, retina_height);
 
@@ -211,18 +213,25 @@ void initOpenGLState()
 	glFrontFace(GL_CCW); // GL_CCW for counter clock-wise
 }
 
-void intFrameBuffer() {
+void initFBOs()
+{
+	//generate FBO ID
 	glGenFramebuffers(1, &shadowMapFBO);
+
+	//create depth texture for FBO
 	glGenTextures(1, &depthMapTexture);
 	glBindTexture(GL_TEXTURE_2D, depthMapTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
+		SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glBindFramebuffer(GL_FRAMEBUFFER, shadowMapFBO); 
+
+	//attach texture to FBO
+	glBindFramebuffer(GL_FRAMEBUFFER, shadowMapFBO);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMapTexture, 0);
-	glDrawBuffer(GL_NONE); 
+	glDrawBuffer(GL_NONE);
 	glReadBuffer(GL_NONE);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
@@ -235,8 +244,9 @@ void initModels()
 
 void initShaders()
 {
-	myCustomShader.loadShader("shaders/shaderStart.vert", "shaders/shaderStart.frag");
+	myCustomShader.loadShader("shaders/shaderStart2.vert", "shaders/shaderStart2.frag");
 	shadowShader.loadShader("shaders/shaderShadow.vert", "shaders/shaderShadow.frag");
+	myCustomShader.useShaderProgram();
 }
 
 void initUniformsStart()
@@ -260,7 +270,7 @@ void initUniformsStart()
 	glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
 	//set the light direction (direction towards the light)
-	lightDir = glm::vec3(-1.0f, 1.0f, 1.0f);
+	lightDir = glm::vec3(0.0f, 1.0f, 1.0f);
 	lightDirLoc = glGetUniformLocation(myCustomShader.shaderProgram, "lightDir");
 	glUniform3fv(lightDirLoc, 1, glm::value_ptr(lightDir));
 
@@ -273,30 +283,22 @@ void initUniformsStart()
 
 glm::mat4 computeLightSpaceTrMatrix() 
 {
-	glm::mat4 lightView = glm::lookAt(lightDir, myCamera.getCameraTarget(), glm::vec3(0.0f, 1.0f, 0.0f));
-	const GLfloat near_plane = 1.0f, far_plane = 30.0f; 
-	glm::mat4 lightProjection = glm::ortho(-20.0f, 20.0f, -20.0f, 20.0f, near_plane, far_plane);
-	return lightProjection * lightView;
+	glm::mat4 lightView = glm::lookAt(2.0f * lightDir, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	glm::mat4 lightProjection = glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, near_plane, far_plane);
+	glm::mat4 lightSpaceTrMatrix = lightProjection * lightView;
+	return lightSpaceTrMatrix;
 }
-
 
 void renderScene(gps::Shader shader)
 {
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	processMovement();
 
 	shader.useShaderProgram();
-
-	//initialize the view matrix
-	view = myCamera.getViewMatrix();
-	//send view matrix data to shader	
-	glUniformMatrix4fv(glGetUniformLocation(shader.shaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
 
 	//initialize the model matrix
 	model = glm::mat4(1.0f);
 	//create model matrix
 	model = glm::rotate(model, glm::radians(angle), glm::vec3(0, 1, 0));
+	model = glm::translate(model, glm::vec3(0, 0, 4));
 	//send model matrix data to shader	
 	glUniformMatrix4fv(glGetUniformLocation(shader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
@@ -316,30 +318,45 @@ void renderScene(gps::Shader shader)
 	ground.Draw(shader);
 }
 
-void render() {
-	// 1. first render to depth map
+void renderSceneDepthMap() {
 	shadowShader.useShaderProgram();
+	glUniformMatrix4fv(glGetUniformLocation(shadowShader.shaderProgram, "lightSpaceTrMatrix"),
+		1,
+		GL_FALSE,
+		glm::value_ptr(computeLightSpaceTrMatrix()));
 	glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
-	glViewport(0, 0, glWindowWidth, glWindowHeight);
 	glBindFramebuffer(GL_FRAMEBUFFER, shadowMapFBO);
 	glClear(GL_DEPTH_BUFFER_BIT);
-
-	glUniformMatrix4fv(glGetUniformLocation(shadowShader.shaderProgram, "lightSpaceTrMatrix"), 1, GL_FALSE, glm::value_ptr(computeLightSpaceTrMatrix()));
-
 	renderScene(shadowShader);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
 
-
+void renderSceneMain() {
 	myCustomShader.useShaderProgram();
-	
-	// 2. then render scene as normal with shadow mapping (using depth map)
-	glViewport(0, 0, glWindowWidth, glWindowHeight);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glViewport(0, 0, retina_width, retina_height);
 	glUniformMatrix4fv(glGetUniformLocation(myCustomShader.shaderProgram, "lightSpaceTrMatrix"), 1, GL_FALSE, glm::value_ptr(computeLightSpaceTrMatrix()));
-	glActiveTexture(GL_TEXTURE3);
-	glUniform1i(glGetUniformLocation(myCustomShader.shaderProgram, "shadowMap"), 3);
+
+	//initialize the view matrix
+	view = myCamera.getViewMatrix();
+	//send view matrix data to shader	
+	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+
+	glActiveTexture(GL_TEXTURE5);
+	glUniform1i(glGetUniformLocation(myCustomShader.shaderProgram, "shadowMap"), 5);
 	glBindTexture(GL_TEXTURE_2D, depthMapTexture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+
 	renderScene(myCustomShader);
+}
+
+void render() {
+	processMovement();
+
+	renderSceneDepthMap();
+	renderSceneMain();
 	
 }
 
