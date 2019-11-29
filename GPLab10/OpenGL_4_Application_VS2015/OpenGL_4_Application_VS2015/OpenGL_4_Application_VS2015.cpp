@@ -406,6 +406,10 @@ void renderScene()
 	glBindTexture(GL_TEXTURE_2D, depthMapTexture);
 	glUniform1i(glGetUniformLocation(myCustomShader.shaderProgram, "shadowMap"), 3);
 
+	glActiveTexture(GL_TEXTURE4);
+	glUniform1i(glGetUniformLocation(myCustomShader.shaderProgram, "skybox"), 4);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, mySkyBox.GetTextureId());
+	
 	//create model matrix for nanosuit
 	model = glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(0, 1, 0));
 	//send model matrix data to shader	
@@ -429,10 +433,6 @@ void renderScene()
 	glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
 
 	ground.Draw(myCustomShader);
-
-	//glBindVertexArray(0);
-	glActiveTexture(GL_TEXTURE0);
-	glUniform1i(glGetUniformLocation(myCustomShader.shaderProgram, "skybox"), 0);
 
 	//draw a white cube around the light
 
