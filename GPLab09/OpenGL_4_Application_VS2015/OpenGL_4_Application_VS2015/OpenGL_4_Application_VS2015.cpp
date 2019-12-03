@@ -270,7 +270,7 @@ void initUniformsStart()
 	glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
 	//set the light direction (direction towards the light)
-	lightDir = glm::vec3(0.0f, 1.0f, 1.0f);
+	lightDir = glm::vec3(0.0f, 2.0f, 2.0f);
 	lightDirLoc = glGetUniformLocation(myCustomShader.shaderProgram, "lightDir");
 	glUniform3fv(lightDirLoc, 1, glm::value_ptr(lightDir));
 
@@ -283,7 +283,7 @@ void initUniformsStart()
 
 glm::mat4 computeLightSpaceTrMatrix() 
 {
-	glm::mat4 lightView = glm::lookAt(myCamera.getCameraTarget() + 2.0f * lightDir, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	glm::mat4 lightView = glm::lookAt(2.0f * lightDir, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	glm::mat4 lightProjection = glm::ortho(-20.0f, 20.0f, -20.0f, 20.0f, near_plane, far_plane);
 	glm::mat4 lightSpaceTrMatrix = lightProjection * lightView;
 	return lightSpaceTrMatrix;
@@ -298,7 +298,7 @@ void renderScene(gps::Shader shader)
 	model = glm::mat4(1.0f);
 	//create model matrix
 	model = glm::rotate(model, glm::radians(angle), glm::vec3(0, 1, 0));
-	model = glm::translate(model, glm::vec3(0, 0, 4));
+	//model = glm::translate(model, glm::vec3(0, 0, 4));
 	//send model matrix data to shader	
 	glUniformMatrix4fv(glGetUniformLocation(shader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
@@ -325,10 +325,10 @@ void renderSceneDepthMap() {
 		GL_FALSE,
 		glm::value_ptr(computeLightSpaceTrMatrix()));
 	glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
-	//glBindFramebuffer(GL_FRAMEBUFFER, shadowMapFBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, shadowMapFBO);
 	glClear(GL_DEPTH_BUFFER_BIT);
 	renderScene(shadowShader);
-	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void renderSceneMain() {
@@ -345,9 +345,6 @@ void renderSceneMain() {
 	glActiveTexture(GL_TEXTURE5);
 	glUniform1i(glGetUniformLocation(myCustomShader.shaderProgram, "shadowMap"), 5);
 	glBindTexture(GL_TEXTURE_2D, depthMapTexture);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
-
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
 
 	renderScene(myCustomShader);
 }
@@ -356,17 +353,18 @@ void render() {
 	processMovement();
 
 	renderSceneDepthMap();
-	//renderSceneMain();
+	renderSceneMain();
 	
 }
 
 int main(int argc, const char * argv[]) {
-
+	
 	initOpenGLWindow();
 	initOpenGLState();
 	initModels();
 	initShaders();
 	initUniformsStart();
+	initFBOs();
 	glCheckError();
 	
 	while (!glfwWindowShouldClose(glWindow)) {

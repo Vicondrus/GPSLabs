@@ -107,5 +107,5 @@ void main()
 	vec3 color1 = computeLightComponents(lightColor);
     
     fColor = vec4(color1, 0.0f);
-	fColor = texture(shadowMap, fragTexCoords);
+	//fColor = texture(shadowMap, fragTexCoords);
 }
